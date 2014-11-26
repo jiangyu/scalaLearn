@@ -1,4 +1,5 @@
 import scala.actors.Actor._
+import scala.actors.migration._
 
 def sumOfFactory(number:Int) = {
 	(0 /: (1 to number)){(sum,i) => if(number%i == 0) sum+i; else sum}
@@ -7,7 +8,7 @@ def sumOfFactory(number:Int) = {
 def isPerfect(candidate:Int) = candidate*2 == sumOfFactory(candidate)
 
 def isPerfect2(candidate:Int) = {
-	val range = 100000
+	val range = 1000
 	val partition = candidate/range 
 	val caller = self
 	for(i <- 0 until partition) {
@@ -20,13 +21,23 @@ def isPerfect2(candidate:Int) = {
 		}		
 	}
 	
-	(0 until partition).foreach{ item:Int => 
-		receive {
-                        case msg:String  => if(msg!="") println(msg)
-                }
+//	(0 until partition).foreach{ item:Int => 
+//		receive {
+//                        case msg:String  => if(msg!="") println(msg)
+//                }
+//	}
+	var continue = true
+	for(i <- 0 until partition) {
+		loopWhile(continue){
+			reactWithin(100000) {
+				case msg:String => if(msg!="") println(msg)
+				case Timeout => 
+					continue=false
+			}
+		}
 	}
 }
 
-val number = 10000000
+val number = 1000000
 //println((0 to number).filter(isPerfect(_)).mkString(","))
 println(isPerfect2(number))
